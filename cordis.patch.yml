@@ -1,0 +1,10 @@
+# dsh-bg-plugin —— DSH 插件包挂载声明
+# DSH 启动时按 bundle 层叠加各插件的 patch，本文件把插件行插入 Web profile 的配置树。
+# 安装方式：
+#   dsh plugin --profile web add dsh-bg-plugin
+#   或本地开发安装：
+#   dsh plugin --profile web add link:<本目录绝对路径>
+
+- insert:
+    - id: dsh-bg-plugin
+      name: dsh-bg-plugin
