@@ -50,7 +50,8 @@ dsh plugin --profile web remove dsh-bg-plugin
   - 启用 / 禁用开关
   - 图片来源：图片 URL（粘贴远程图片链接）/ 本地图片（输入文件夹路径或「浏览文件夹…」→ 列出图片 → 点击应用；支持 png/jpg/jpeg/gif/webp/bmp/avif/svg，单张 ≤ 12MB）
   - 背景清晰度（0–100%）、压暗（0–80%）、模糊（0–20px）、恢复默认
-- 动态版额外提供 Run 卡片快捷开关（`tool.view.cordis`，动态专属座位，静态版不含）
+- **持久化（静态版）**：所有调整自动保存到 `$DSH_HOME/.dsh-bg-state.json`（默认 `C:\Users\<你>\.dsh\.dsh-bg-state.json`）；刷新页面、重启 DSH 后自动恢复状态并重应用背景（含上次的本地图片）。
+- 动态版额外提供 Run 卡片快捷开关（`tool.view.cordis`，动态专属座位，静态版不含）；动态版为会话级，不持久化。
 
 ## 工作原理
 
