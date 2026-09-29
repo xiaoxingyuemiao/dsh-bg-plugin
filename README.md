@@ -40,6 +40,30 @@ dsh plugin --profile web add link:<本目录绝对路径>
 dsh plugin --profile web remove dsh-bg-plugin
 ```
 
+## 桌面端（Electron）支持
+
+插件同时支持 DSH 网页端与桌面端（Electron）——**两端只需各自安装一次**，状态文件共用。
+
+桌面端与网页端是两个独立的 DSH 实例（不同 profile、不同运行时、甚至不同 DSH 版本），因此要分别安装：
+
+| | 网页端 | 桌面端 |
+| --- | --- | --- |
+| profile | `$DSH_HOME/profiles/web` | `$DSH_HOME/profiles/desktop` |
+| 安装 CLI | 全局 `dsh`（如 `dsh plugin --profile web add …`） | 桌面端**自带** CLI：`<安装目录>\resources\runtime\cli\bin\dsh.cmd` |
+| 页面载体 | 浏览器 `http://127.0.0.1:<port>/?token=…` | Electron 窗口加载同一套 HTTP 页面（宿主经 IPC 下发 `authenticatedUrl` 与索引注入） |
+
+桌面端安装（Windows 示例）：
+
+```powershell
+& "D:\DeepSeek Harness\resources\runtime\cli\bin\dsh.cmd" plugin --profile desktop add link:D:\DSH插件\dsh-bg-plugin
+```
+
+要点：
+- 桌面端 profile 是**应用专属管理**的：普通 `dsh --profile desktop …` 会被拒绝（`profile "desktop" is managed exclusively by the Electron application`），只有桌面端自带 CLI 的 **插件子命令**被放行，所以必须用上表中的 `dsh.cmd`。
+- 安装后需**重启桌面端 App** 才会加载（重启会中断正在进行的会话，会话可恢复）。
+- 已核对的 0.2.0-rc.2 契约（与 0.1.1-rc.2 一致）：`/plugins/<id>/client.js` 路由、`__ModuleLoader__.load({id, factory})`、`package.json` 的 `dsh.client` 字段、`settings.section` 槽位、`theme.overrideTokens`、`webServer.register({kind, path, handler})`、设置面板 `[role="dialog"][aria-modal="true"]`、`fs` 服务。
+- 背景状态 `$DSH_HOME/.dsh-bg-state.json` 由两个 profile **共用**，因此在任意一端调整后，另一端重启即恢复同一背景。
+
 ## 动态版安装（会话级，重启失效）
 
 读取 `define.json` 作为 `cordis_define` 参数（`plugin.kind: 'existing'`、`pluginId: 'dshbg-1'`；若不存在则 `kind: 'new'` + `idPrefix: 'dshbg'`），再用返回的 `packageId` 执行 `cordis_run` 并在 GUI 批准。
