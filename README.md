@@ -15,8 +15,8 @@
 | --- | --- |
 | `package.json` | 插件包清单（`dsh.client` 声明 + `dsh.bundle.patch`） |
 | `cordis.patch.yml` | 挂载声明：把插件行插入 Web profile 组合树 |
-| `lib/index.js` | Host 半边（静态版）：webServer 提供 `/dsh-bg/api/list`、`/dsh-bg/api/set`、`/dsh-bg/api/img` 路由 |
-| `lib/client.js` | Client 半边（静态版）：设置页 UI，fetch 直连 API 路由 |
+| `lib/index.js` | Host 半边（静态版）：webServer 提供 `/dsh-bg/api/state`、`/list`、`/set`、`/media`、`/orb/status` 路由 |
+| `lib/client.js` | Client 半边（静态版）：设置页 UI（Tab：主应用 / 悬浮球），fetch 直连 API 路由 |
 | `host.js` | 动态版 Host 源码（`cordis_define` 的 `code.host`） |
 | `client.js` | 动态版 Client 源码（`cordis_define` 的 `code.client`） |
 | `define.json` | 动态版完整重新安装载荷 |
@@ -81,6 +81,23 @@ dsh plugin --profile web remove dsh-bg-plugin
 - **持久化（静态版）**：所有调整自动保存到 `$DSH_HOME/.dsh-bg-state.json`（默认 `C:\Users\<你>\.dsh\.dsh-bg-state.json`）；刷新页面、重启 DSH 后自动恢复状态并重应用背景（含上次的本地媒体与裁切区域）。
 - **框选展示区域（静态版，仅图片）**：选择图片后，设置页显示预览图——拖动框选展示区域、拖动选框移动、拖四角调整大小；区域以图片分数 `{fx,fy,fw,fh}` 存储并持久化。背景渲染用纯 CSS（`calc/max + vw/vh`）把裁切区域等比放大铺满视口、区域中心对准屏幕中心，窗口缩放自动跟随。视频不使用该机制。
 - 动态版额外提供 Run 卡片快捷开关（`tool.view.cordis`，动态专属座位，静态版不含）；动态版为会话级，不持久化。
+
+### 设置页结构（Tab）
+
+设置 → 背景 现在是一页两 Tab：
+
+| Tab | 内容 |
+| --- | --- |
+| **主应用背景** | 上面列出的全部功能（媒体来源、框选、清晰度、恢复默认） |
+| **悬浮球** | 悬浮球（[dsh-orb-cordis](https://github.com/mini-yifan/dsh-orb-cordis)）状态检测、安装引导、能力说明 |
+
+悬浮球页的检测走宿主路由 `GET /dsh-bg/api/orb/status`：
+
+- `installed`：当前 profile 能否解析到 `dsh-orb` 包；
+- `running`：它的公开设置端点 `GET /.dsh-orb/settings` 是否响应（未运行 → 展示安装命令与仓库链接）；
+- `supportsBackground`：上游是否已提供背景接口（为将来对接预留）。
+
+> **关于悬浮球背景（现状）**：悬浮球展开面板的背景写死在它自己的 `floating.css`（`#panel { background: var(--white) }`），页面由它的 Electron 助手以 `file://` 加载，且没有任何对外暴露的背景/CSS 注入接口。因此**在不改动悬浮球任何文件的前提下无法为面板设置背景**；本插件只做检测与引导。一旦上游提供背景接口，这一页会直接接入图片/视频选择与「与主应用双向同步」。
 
 ## 工作原理
 
