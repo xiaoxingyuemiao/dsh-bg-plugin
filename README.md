@@ -116,9 +116,21 @@ dsh plugin --profile web remove dsh-bg-plugin
 
 - 悬浮球背景**独立**于主应用：可分别设 URL / 本地文件（本地列表复用「主应用背景」页选定的文件夹）、独立清晰度；
 - **双向同步**按钮：「主应用 → 悬浮球」/「悬浮球 → 主应用」互相复制（媒体、类型、清晰度）；
+- **安全阀**：源一侧还没有选媒体时，同步会被**拒绝**（返回「还没有选择背景媒体，已取消同步」），绝不会把空背景覆盖到另一侧；
 - 悬浮球配置存于 `$DSH_HOME/.dsh-bg-state.json` 的 `orb` 分区，与主应用分区互不影响。
 
-相关路由：`GET/POST /dsh-bg/api/orb`（读取/写入，patched 助手轮询它）、`POST /dsh-bg/api/orb/set`（选媒体）、`GET /dsh-bg/api/media/orb`（媒体字节）、`POST /dsh-bg/api/sync`（双向同步）、`POST /dsh-bg/api/orb/patch`、`POST /dsh-bg/api/orb/unpatch`。
+### 状态留底与误操作找回
+
+每次写状态文件前都会自动留底，任何一次误覆盖都能找回：
+
+| 文件 | 说明 |
+| --- | --- |
+| `$DSH_HOME/.dsh-bg-state.prev.json` | **上一份**内容（每次保存前覆盖写入） |
+| `$DSH_HOME/.dsh-bg-state.bak-<时间戳>.json` | 时间戳快照，最多保留 3 份、间隔 ≥10 分钟 |
+
+「主应用背景」页底部有 **「恢复上一份设置」** 按钮（`POST /dsh-bg/api/state/restore`，先弹窗确认，成功后自动重载页面）。
+
+相关路由：`GET/POST /dsh-bg/api/orb`（读取/写入，patched 助手轮询它）、`POST /dsh-bg/api/orb/set`（选媒体）、`GET /dsh-bg/api/media/orb`（媒体字节）、`POST /dsh-bg/api/sync`（双向同步）、`POST /dsh-bg/api/orb/patch`、`POST /dsh-bg/api/orb/unpatch`、`POST /dsh-bg/api/state/restore`（恢复上一份）。
 
 ## 工作原理
 
