@@ -89,15 +89,36 @@ dsh plugin --profile web remove dsh-bg-plugin
 | Tab | 内容 |
 | --- | --- |
 | **主应用背景** | 上面列出的全部功能（媒体来源、框选、清晰度、恢复默认） |
-| **悬浮球** | 悬浮球（[dsh-orb-cordis](https://github.com/mini-yifan/dsh-orb-cordis)）状态检测、安装引导、能力说明 |
+| **悬浮球** | 悬浮球（[dsh-orb-cordis](https://github.com/mini-yifan/dsh-orb-cordis)）状态检测、安装引导、**面板背景支持（写入补丁）**、悬浮球背景设置、与主应用双向同步 |
 
 悬浮球页的检测走宿主路由 `GET /dsh-bg/api/orb/status`：
 
-- `installed`：当前 profile 能否解析到 `dsh-orb` 包；
-- `running`：它的公开设置端点 `GET /.dsh-orb/settings` 是否响应（未运行 → 展示安装命令与仓库链接）；
-- `supportsBackground`：上游是否已提供背景接口（为将来对接预留）。
+- `installed`：当前 profile 的 `node_modules/dsh-orb` 是否存在（读 `$DSH_PROFILE_DIR`，不从本包做模块解析——本包常以 junction 安装，解析会走真实路径而找不到）；
+- `running`：它自己的端点是否活着（**401/403 也算活着**，只有 404 或连不上才算没运行）；
+- `patched`：是否已写入本插件的面板背景补丁。
 
-> **关于悬浮球背景（现状）**：悬浮球展开面板的背景写死在它自己的 `floating.css`（`#panel { background: var(--white) }`），页面由它的 Electron 助手以 `file://` 加载，且没有任何对外暴露的背景/CSS 注入接口。因此**在不改动悬浮球任何文件的前提下无法为面板设置背景**；本插件只做检测与引导。一旦上游提供背景接口，这一页会直接接入图片/视频选择与「与主应用双向同步」。
+### 悬浮球面板背景（写入补丁，需确认）
+
+悬浮球的展开面板背景写死在它的 `floating.css`，且没有对外接口，因此**只能改它的文件**。本插件做成"点击才动、且可还原"：
+
+1. 「启用（首次弹窗确认）」→ 浏览器弹窗列出将覆盖的文件，同意才继续；
+2. 写入前把原文件**完整备份**到 `$DSH_HOME/.dsh-bg-orb-backup/<时间戳>/`（含 manifest）；
+3. 只覆盖**两个文件**：
+   - `dist/helper/assets/floating.html` —— 放宽 CSP，允许本机 `http://127.0.0.1:*` 的图片/视频；
+   - `dist/helper/lib/main.js` —— 助手主进程加一个背景控制器（每 3 秒轮询本插件 `GET /dsh-bg/api/orb`，用 `executeJavaScript` 在面板内注入背景层：图片/视频 + 可读性蒙层）。
+
+   它的 `floating.css`、`shell.js`、`preload.cjs`、宿主代码一律不动；
+4. 重启 DSH 后生效；本页「撤销补丁」可从备份逐字节还原。
+
+锚点不匹配（例如悬浮球升级后结构变了）会明确报错并**不改动任何文件**。
+
+### 悬浮球背景与双向同步
+
+- 悬浮球背景**独立**于主应用：可分别设 URL / 本地文件（本地列表复用「主应用背景」页选定的文件夹）、独立清晰度；
+- **双向同步**按钮：「主应用 → 悬浮球」/「悬浮球 → 主应用」互相复制（媒体、类型、清晰度）；
+- 悬浮球配置存于 `$DSH_HOME/.dsh-bg-state.json` 的 `orb` 分区，与主应用分区互不影响。
+
+相关路由：`GET/POST /dsh-bg/api/orb`（读取/写入，patched 助手轮询它）、`POST /dsh-bg/api/orb/set`（选媒体）、`GET /dsh-bg/api/media/orb`（媒体字节）、`POST /dsh-bg/api/sync`（双向同步）、`POST /dsh-bg/api/orb/patch`、`POST /dsh-bg/api/orb/unpatch`。
 
 ## 工作原理
 
