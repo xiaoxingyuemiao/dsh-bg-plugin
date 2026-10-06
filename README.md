@@ -146,6 +146,20 @@ dsh plugin --profile web remove dsh-bg-plugin
 
 相关路由：`GET/POST /dsh-bg/api/orb`（读取/写入，patched 助手轮询它）、`POST /dsh-bg/api/orb/set`（选媒体）、`GET /dsh-bg/api/media/orb`（媒体字节）、`POST /dsh-bg/api/sync`（双向同步）、`POST /dsh-bg/api/orb/patch`、`POST /dsh-bg/api/orb/unpatch`、`POST /dsh-bg/api/state/restore`（恢复上一份）。
 
+### 自动更新（设置页最下面）
+
+设置页最底部有一个 **「自动更新」勾选项，默认开启**：
+
+- 开启时：打开设置页会检查 GitHub `main` 分支的版本，发现新版本就**自动下载并覆盖本插件文件**，然后提示「重启 DSH 后生效」；
+- 覆盖前把现有文件备份到 `$DSH_HOME/.dsh-bg-update-backup/<时间戳>/`；
+- 也可以手动点「**检查更新**」/「**立即更新**」；
+- 本地版本读 `package.json`；远端版本读仓库 `main` 分支的 `package.json`；
+- 走 `api.github.com`（`raw.githubusercontent.com` 在部分网络下 DNS 不通，API 的 raw 接口可用）；
+- 更新文件清单：`package.json`、`lib/index.js`、`lib/client.js`、`lib/orb-patch.js`、`README.md`、`LICENSE`；
+- 网络不可用时静默跳过，不影响其它功能。
+
+相关路由：`GET/POST /dsh-bg/api/update`（检查，结果缓存 5 分钟）、`POST /dsh-bg/api/update/apply`（应用更新）。
+
 ## 工作原理
 
 1. **背景层**：注入 `body::before` 固定层（`position:fixed; z-index:-1`）承载图片（静态版用 `<style>` 元素注入，动态版用 `styles.insert`）；视频则在 `z-index:-2` 注入真实 `<video>` 元素层。

@@ -1,7 +1,7 @@
 {
   "name": "dsh-bg-plugin",
-  "version": "1.0.0",
-  "description": "DSH 自定义背景插件：为 DSH Web GUI 应用远程 URL 图片或本地图片作为背景，支持清晰度/压暗/模糊调节，设置面板保持默认外观。",
+  "version": "1.1.0",
+  "description": "DSH 自定义背景插件：为 DSH 界面（主应用 + 悬浮球展开面板）应用图片或视频背景，支持框选展示区域、清晰度调节、自动更新；设置面板保持默认外观。",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
